@@ -1,10 +1,9 @@
 %BIT ERROR RATE
 
-% Example binary strings
-original_msg = message;
-decoded_msg = decoded_message;
+fprintf('Length of original message : %.4f\n', length(message));  
+fprintf('Length of decoded message: %.4f\n',length(extracted_message));  
 
-if size(original_msg) == size(decoded_msg)
+if length(original_msg) == length(decoded_msg)
     % Calculate number of bit errors
     num_errors = sum(original_msg ~= decoded_msg);
     len_check = '';

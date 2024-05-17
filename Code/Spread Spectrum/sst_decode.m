@@ -1,27 +1,35 @@
+% Extract the embedded message from the modified audio
 % Load the modified audio file
-[modified_audio, Fs] = audioread('output_sst.wav');
+[y, Fs] = audioread('output_sst.wav');
 
 % Perform FFT on the modified audio signal
-X_modified = fft(modified_audio);
+Y = fft(y);
 
-% Extract the encoded message from the magnitude of the FFT coefficients
-message_length = 100; % Length of the message
-binary_message = zeros(1, message_length);
+% Perform FFT on the sterile(no data) audio signal
+sterile_signal = x;
+S = fft(sterile_signal);
+
+% Extract the binary message from the FFT coefficients
+extracted_binary_message = zeros(1, message_length);
 for i = 1:message_length
-    % Check if the magnitude is greater than a threshold 
-    if abs(X_modified(i+1)) > 0.5
-        binary_message(i) = 1;
+    if abs(Y(i+1)) / abs(S(i+1)) > 1.5
+        extracted_binary_message(i) = 1;
     else
-        binary_message(i) = 0;
+        extracted_binary_message(i) = 0;
     end
+    % Debug output for extraction process
+    fprintf('Extracting bit at position %d: extracted magnitude = %.4f, original magnitude = %.4f, difference factor = %.4f, extracted bit = %d\n', i+1, abs(Y(i+1)), abs(S(i+1)), abs(Y(i+1))/abs(S(i+1)), extracted_binary_message(i));
 end
 
-% Convert the binary message back to its string representation
-binary_message_str = num2str(binary_message);
-padding_length = mod(8 - rem(length(binary_message_str), 8), 8);
-binary_message_str = [repmat('0', 1, padding_length), binary_message_str];
-binary_message_str = reshape(binary_message_str, 8, []).';
-decoded_message = char(bin2dec(binary_message_str))';
+% Convert the binary message back to the original string
+extracted_message = char(bin2dec(char(reshape(extracted_binary_message, 8, []).' + '0'))).';
 
-disp('Decoded Message:');
-disp(decoded_message);
+% Display the extracted message
+disp(['Extracted message: ', extracted_message]);
+
+% Check if the extracted message matches the original message
+if strcmp(message, extracted_message)
+    disp('Steganography was successful!');
+else
+    disp('Steganography failed.');
+end
