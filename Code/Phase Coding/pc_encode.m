@@ -1,49 +1,44 @@
-[audio, fs] = audioread('rickroll.wav'); % Load your audio file here
+% Load the audio file
+[x, Fs] = audioread('rickroll.wav');
 
-% Normalize the audio
-audio_normalized = audio / max(abs(audio));
+% Convert the message string to binary
+message = 'Never going to give you up!';
+binary_message = reshape(dec2bin(message, 8).' - '0', 1, []);
 
-% Split audio into frames 
-frame_length = 1024;
-num_frames = ceil(length(audio) / frame_length);
-audio_frames = zeros(frame_length, num_frames);
-audio_padded = [audio_normalized; zeros(num_frames * frame_length - length(audio), 1)];
-for i = 1:num_frames
-    audio_frames(:, i) = audio_padded((i-1)*frame_length+1 : i*frame_length);
+% Ensure the message can fit in the audio file
+if length(binary_message) > length(x)
+    error('The message is too long to be embedded in the audio file.');
 end
 
-% Define phase shift for encoding message
+% Perform FFT on the audio signal
+X = fft(x);
+
+% Embed the binary message signal into the phase of the FFT coefficients
 phase_shift = pi/2; 
 
-% Encode message into phase of audio frames
-message = 'Never gonna give you up, never gonna let you down!';
-message_binary = reshape(dec2bin(double(message), 8)', 1, []);
-index = 1;
-for i = 1:num_frames
-    if index <= length(message_binary)
-        bit = str2double(message_binary(index));
-        % Apply phase shift based on bit value
-        if bit == 1
-            audio_frames(:, i) = audio_frames(:, i) * exp(1i * phase_shift);
-        end
-        index = index + 1;
-    else
-        break;
+message_length = length(binary_message);
+for i = 1:message_length
+    original_phase = angle(X(i+1));
+    if binary_message(i) == 0
+        new_phase = original_phase - phase_shift;
+    elseif binary_message(i) == 1
+        new_phase = original_phase + phase_shift;
     end
+    X(i+1) = abs(X(i+1)) * exp(1i * new_phase);
+    % Debug output for embedding process
+    fprintf('Embedding bit %d at position %d: original phase = %.4f, new phase = %.4f, difference factor = %.4f\n', binary_message(i), i+1, original_phase, new_phase, new_phase - original_phase);
 end
 
-% Reconstruct audio from modified frames
-audio_reconstructed = zeros(size(audio_padded));
-for i = 1:num_frames
-    audio_reconstructed((i-1)*frame_length+1 : i*frame_length) = audio_frames(:, i);
-end
-real_audio = abs(audio_reconstructed);
-disp(audio_reconstructed)
+% Perform inverse FFT to get the modified audio signal
+modified_audio = real(ifft(X));
 
-% Save the reconstructed audio
-audiowrite('reconstructed_audio_phase_coding.wav', real_audio, fs);
+% Normalize the modified audio to prevent clipping
+modified_audio = modified_audio / max(abs(modified_audio));
 
-% --- Optional: Play Original and Reconstructed Audio for Comparison ---
-sound(audio_normalized, fs); % Play original audio
-pause(length(audio) / fs + 1); % Wait for audio to finish plus a little extra
-sound(real_audio, fs); % Play reconstructed audio
+% Write the modified audio to a new file
+audiowrite('output_pc.wav', modified_audio, Fs);
+
+% Play the original and modified audio for comparison
+sound(x, Fs);
+pause(length(x)/Fs);
+sound(modified_audio, Fs);

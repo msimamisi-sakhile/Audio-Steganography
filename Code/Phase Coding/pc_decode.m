@@ -1,47 +1,41 @@
-% Load the reconstructed audio
-[audio_reconstructed, fs] = audioread('reconstructed_audio_phase_coding.wav');
+% Extract the embedded message from the modified audio
+% Load the modified audio file
+[y, Fs] = audioread('output_pc.wav');
 
-% Split audio into frames
-frame_length = 1024;
-num_frames = floor(length(audio_reconstructed) / frame_length);
-audio_frames = zeros(frame_length, num_frames);
-for i = 1:num_frames
-    audio_frames(:, i) = audio_reconstructed((i-1)*frame_length+1 : i*frame_length);
-end
+% Perform FFT on the modified audio signal
+Y = fft(y);
 
-% Use same phase shift used for encoding
-phase_shift = pi/2; % Adjust as needed
+% Perform FFT on the sterile (original) audio signal
+sterile_signal = x;
+S = fft(sterile_signal);
 
-% Initialize variables
-message_binary = '';
-prev_phase = angle(audio_frames(1, 1));
-threshold = phase_shift / 2;
+% Extract the binary message from the FFT coefficients
+extracted_binary_message = zeros(1, message_length);
 
-% Decode message from phase differences
-for i = 2:num_frames
-    curr_phase = angle(audio_frames(1, i));
-    phase_diff = mod(curr_phase - prev_phase + pi, 2*pi) - pi;
-    if abs(phase_diff) > threshold
-        message_binary = strcat(message_binary, '1');
-    else
-        message_binary = strcat(message_binary, '0');
+for i = 1:message_length
+    original_phase = angle(S(i+1));
+    modified_phase = angle(Y(i+1));
+    phase_diff = modified_phase - original_phase;
+
+    if phase_diff >= 0.1*floor(0.5 * phase_shift*10)
+        extracted_binary_message(i) = 1;
+    elseif phase_diff <= round(0.5 * phase_shift)
+        extracted_binary_message(i) = 0;
     end
-    prev_phase = curr_phase;
-
-    % Debugging: Print phase differences
-    disp(['Frame ', num2str(i), ': Phase Difference = ', num2str(phase_diff)]);
+    
+    % Debug output for extraction process
+    fprintf('Extracting bit at position %d: extracted phase = %.4f, original phase = %.4f, difference factor = %.4f, extracted bit = %d\n', i+1, modified_phase, original_phase, phase_diff, extracted_binary_message(i));
 end
 
+% Convert the binary message back to the original string
+extracted_message = char(bin2dec(char(reshape(extracted_binary_message, 8, []).' + '0'))).';
 
-% Pad message with zeros to make its length divisible by 8
-remainder = mod(length(message_binary), 8);
-if remainder > 0
-    message_binary = strcat(message_binary, repmat('0', 1, 8 - remainder));
+% Display the extracted message
+disp(['Extracted message: ', extracted_message]);
+
+% Check if the extracted message matches the original message
+if strcmp(message, extracted_message)
+    disp('Steganography was successful!');
+else
+    disp('Steganography executed with errors.');
 end
-
-disp(message_binary)
-% Convert binary message to ASCII characters
-message = char(bin2dec(reshape(message_binary, 8, []).'));
-
-disp('Decoded Message:');
-fprintf(message);
