@@ -3,8 +3,8 @@
 original_msg = message;
 decoded_msg = extracted_message;
 
-fprintf('Length of original message : %.4f\n', length(message));  
-fprintf('Length of decoded message: %.4f\n',length(extracted_message));  
+fprintf('Length of original message : %.4f\n', length(original_msg));  
+fprintf('Length of decoded message: %.4f\n',length(decoded_msg));  
 
 if length(original_msg) == length(decoded_msg)
     % Calculate number of bit errors
