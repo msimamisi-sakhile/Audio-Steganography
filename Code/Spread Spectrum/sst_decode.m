@@ -31,5 +31,5 @@ disp(['Extracted message: ', extracted_message]);
 if strcmp(message, extracted_message)
     disp('Steganography was successful!');
 else
-    disp('Steganography executed with errors.');
+    disp('Steganography failed.');
 end

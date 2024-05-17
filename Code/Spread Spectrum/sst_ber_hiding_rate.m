@@ -1,7 +1,7 @@
 %BIT ERROR RATE
 
-original_msg = message;
-decoded_msg = extracted_message;
+original_msg = binary_message;
+decoded_msg = extracted_binary_message;
 
 fprintf('Length of original message : %.4f\n', length(original_msg));  
 fprintf('Length of decoded message: %.4f\n',length(decoded_msg));  
