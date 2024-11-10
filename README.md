@@ -1,4 +1,4 @@
-Project Overview\
+Project Overview
 
 Audio steganography is a technique used to conceal information within audio files in such a way that the hidden message is undetectable by the human ear. This project includes:
 
@@ -6,7 +6,7 @@ Audio steganography is a technique used to conceal information within audio file
     Phase Coding
     Spread Spectrum
 
-Each of these methods provides varying levels of complexity and effectiveness in hiding data within audio samples.\
+Each of these methods provides varying levels of complexity and effectiveness in hiding data within audio samples.
 
 Project Structure
 
