@@ -1,4 +1,4 @@
-📂 EEE4114F_PROJECT_Audio_Steganography\\
+📂 EEE4114F_PROJECT_Audio_Steganography\n
 │
 ├── 📂 code
 │   ├── 📄 lsb.py            # LSB steganography implementation
